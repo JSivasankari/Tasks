@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>CodeBuddy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:16px;display:flex;flex-direction:column;height:100vh;box-sizing:border-box}
+#log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.m{padding:8px 12px;border-radius:12px;max-width:85%;white-space:pre-wrap}
+.user{background:#2563eb;color:#fff;align-self:flex-end}
+.bot{background:#eee;align-self:flex-start}
+.err{background:#fee;color:#b00;align-self:flex-start}
+form{display:flex;gap:8px;margin-top:12px}
+input{flex:1;padding:10px;border:1px solid #ccc;border-radius:8px}
+button{padding:10px 16px;border:0;border-radius:8px;background:#2563eb;color:#fff}
+</style></head><body>
+<h2>🤖 CodeBuddy</h2><div id="log"></div>
+<form id="f"><input id="t" placeholder="Ask a coding question..." autocomplete="off"><button>Send</button></form>
+<script>
+let cid = null;
+const log = document.getElementById("log"), t = document.getElementById("t");
+function add(text, cls){const d=document.createElement("div");d.className="m "+cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
+document.getElementById("f").onsubmit = async e => {
+  e.preventDefault();
+  const msg = t.value.trim(); if(!msg) return;
+  t.value = ""; add(msg, "user");
+  const wait = add("Thinking...", "bot");
+  try {
+    const r = await fetch("/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({message:msg, conversation_id:cid})});
+    const d = await r.json(); cid = d.conversation_id || cid;
+    wait.className = "m " + (r.ok ? "bot" : "err"); wait.textContent = d.reply || d.error;
+  } catch { wait.className = "m err"; wait.textContent = "Can't reach the server. Is it running?"; }
+};
+</script></body></html>
